@@ -23,6 +23,12 @@ class BlogUser
     */
     protected $posts;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\BlogComments", mappedBy="user")
+    */
+    protected $comments;
+
+
     public function getId(): ?int
     {
         return $this->id;
@@ -30,6 +36,7 @@ class BlogUser
 
     public function __construct(){
         $this->posts = new ArrayCollection();
+        $this->comments = new ArrayCollection();
     }
 
     /**
@@ -57,6 +64,37 @@ class BlogUser
             // set the owning side to null (unless already changed)
             if ($post->getUser() === $this) {
                 $post->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BlogComments[]
+     */
+    public function getComments(): Collection
+    {
+        return $this->comments;
+    }
+
+    public function addComment(BlogComments $comment): self
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments[] = $comment;
+            $comment->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComment(BlogComments $comment): self
+    {
+        if ($this->comments->contains($comment)) {
+            $this->comments->removeElement($comment);
+            // set the owning side to null (unless already changed)
+            if ($comment->getUser() === $this) {
+                $comment->setUser(null);
             }
         }
 

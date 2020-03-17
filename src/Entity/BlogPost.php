@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -37,9 +39,25 @@ class BlogPost
     private $description;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\BlogUser", inversedBy="BlogPost")
+     * @ORM\ManyToOne(targetEntity="App\Entity\BlogUser", inversedBy="posts")
      */
     protected $user;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\BlogCategory", inversedBy="posts")
+    */
+    protected $categories;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\BlogComments", mappedBy="post")
+    */
+    protected $comments;
+
+    public function __construct(){
+        $this->categories = new ArrayCollection();
+        $this->comments = new ArrayCollection();
+    }
+    
 
     public function getId(): ?int
     {
@@ -102,6 +120,63 @@ class BlogPost
     public function setUser(?BlogUser $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BlogCategory[]
+     */
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(BlogCategory $category): self
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories[] = $category;
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(BlogCategory $category): self
+    {
+        if ($this->categories->contains($category)) {
+            $this->categories->removeElement($category);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|BlogComments[]
+     */
+    public function getComments(): Collection
+    {
+        return $this->comments;
+    }
+
+    public function addComment(BlogComments $comment): self
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments[] = $comment;
+            $comment->setPost($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComment(BlogComments $comment): self
+    {
+        if ($this->comments->contains($comment)) {
+            $this->comments->removeElement($comment);
+            // set the owning side to null (unless already changed)
+            if ($comment->getPost() === $this) {
+                $comment->setPost(null);
+            }
+        }
 
         return $this;
     }
