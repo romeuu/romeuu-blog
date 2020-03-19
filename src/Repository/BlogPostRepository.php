@@ -47,4 +47,26 @@ class BlogPostRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function findAllByTitle($title): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        
+        // $qb = $this->createQueryBuilder('p')
+        //     ->where('p.title LIKE :title')
+        //     ->setParameter('title', $title);
+
+        // $query = $qb->getQuery();
+
+        // return $query->execute();
+
+        $sql = "
+        SELECT * FROM blog_post p WHERE p.title LIKE '%".$title."%'
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['title' => $title]);
+
+        // returns an array of arrays (i.e. a raw data set)
+        return $stmt->fetchAll();
+    }
 }
