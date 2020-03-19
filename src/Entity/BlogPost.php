@@ -5,9 +5,11 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\BlogPostRepository")
+ * @ORM\HasLifecycleCallbacks()
  */
 class BlogPost
 {
@@ -20,6 +22,8 @@ class BlogPost
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank
+     * @Assert\Length(max= "255")
      */
     private $title;
 
@@ -34,7 +38,13 @@ class BlogPost
     private $regDate;
 
     /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $modDate;
+
+    /**
      * @ORM\Column(type="text")
+     * @Assert\NotBlank(groups={"edit"})
      */
     private $description;
 
@@ -58,6 +68,14 @@ class BlogPost
         $this->comments = new ArrayCollection();
         
         $this->regDate = new \DateTime();
+    }
+
+    /**
+     * @ORM\PreUpdate
+     */
+    public function setModificationDate()
+    {
+        $this->modDate = new \DateTime();
     }
     
 
@@ -179,6 +197,18 @@ class BlogPost
                 $comment->setPost(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getModDate(): ?\DateTimeInterface
+    {
+        return $this->modDate;
+    }
+
+    public function setModDate(\DateTimeInterface $modDate): self
+    {
+        $this->modDate = $modDate;
 
         return $this;
     }

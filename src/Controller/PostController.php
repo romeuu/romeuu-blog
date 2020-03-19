@@ -7,8 +7,13 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response as Response;
 use Symfony\Component\HttpFoundation\JsonResponse as JsonResponse;
 use Symfony\Component\HttpFoundation\Request as Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 
 use App\Entity\BlogPost;
+use App\Form\AppBlogPostType;
 
 $request = Request::createFromGlobals();
 
@@ -26,17 +31,17 @@ class PostController extends AbstractController
     }
 
     /**
-     * @Route("/post/list/{page}", name="list")
+     * @Route("/post/list/", name="list")
      */
     
-    public function listAction(Request $request, $page){
+    public function listAction(Request $request){
         $postRespository = $this->getDoctrine()
         ->getRepository('App:BlogPost');
 
         $posts = $postRespository->findAll();
 
         // Change so the user can see the complete list.
-        return new Response('List ' . $posts);
+        return new Response('List ');
     }
 
     /**
@@ -58,19 +63,30 @@ class PostController extends AbstractController
      * @Route("/post/new", name="post_new")
      */
     
-    public function newAction(Request $request){
+    public function newAction(Request $request, ValidatorInterface $validator){
         // Replace with form so the user can input data and create a post.
 
         $post = new BlogPost();
-        $post->setTitle('Starting out with Symfony 5');
-        $post->setSlug('starting-out-symfony5');
-        $post->setDescription('A brief post about your first steps in the Symfony world.');
 
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($post);
-        $em->flush();
+        $form = $this->createForm(AppBlogPostType::class, $post);
 
-        return new Response('Created post with title ' . $post->getTitle());
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $post = $form->getData();
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($post);
+            $em->flush();
+
+            return $this->redirectToRoute('list');
+        }
+
+        return $this->render('post/new.html.twig', [
+            'form' => $form->createView(),
+        ]);
+
+        // return new Response('Created post with title ' . $post->getTitle());
     }
 
     /**
