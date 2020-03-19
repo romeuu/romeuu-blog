@@ -41,7 +41,9 @@ class PostController extends AbstractController
         $posts = $postRespository->findAll();
 
         // Change so the user can see the complete list.
-        return new Response('List ');
+        return $this->render('post/list.html.twig', array(
+            'posts'=>$posts
+        ));
     }
 
     /**
@@ -79,6 +81,12 @@ class PostController extends AbstractController
             $em->persist($post);
             $em->flush();
 
+            
+            $this->addFlash(
+                'success',
+                'The post has been created!'
+            );
+
             return $this->redirectToRoute('list');
         }
 
@@ -97,9 +105,13 @@ class PostController extends AbstractController
         $postRespository = $this->getDoctrine()
         ->getRepository('App:BlogPost');
 
-        $post = $postRespository->find($id);
+        $post = $postRespository->findPost($id);
 
-        return new Response('Post with title ' . $post->getTitle());
+        if(count($post)>0){
+            $foundPost = $post[0];
+        }
+
+        return new Response('Post with title ' . $foundPost['title']);
     }
 
     /**
@@ -107,6 +119,46 @@ class PostController extends AbstractController
      */
     
     public function editAction(Request $request, $id){
+        $postRespository = $this->getDoctrine()
+        ->getRepository('App:BlogPost');
+
+        $post = $postRespository->findPost($id);
         
+        if(count($post)>0){
+            $foundPost = $post[0];
+        }
+
+        $form = $this->createForm(AppBlogPostType::class, $foundPost);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $postarray = $form->getData();
+
+            $em = $this->getDoctrine()->getManager();
+            
+            $post = new BlogPost();
+            $post->setTitle($postarray['title']);
+            $post->setSlug($postarray['slug']);
+            $post->setDescription($postarray['description']);
+
+            // $post = $em->merge($post);
+            // $em->persist($post);
+            // $em->flush();
+
+            $postRespository->updatePost($id, $post);
+
+            $this->addFlash(
+                'success',
+                'Your changes were saved!'
+            );
+
+            return $this->redirectToRoute('list');
+        }
+
+        return $this->render('post/edit.html.twig', [
+            'posts' => $post,
+            'form' => $form->createView()
+        ]);
     }
 }

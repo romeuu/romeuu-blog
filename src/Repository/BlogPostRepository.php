@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\BlogPost;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
+use \PDO;
 
 /**
  * @method BlogPost|null find($id, $lockMode = null, $lockVersion = null)
@@ -62,5 +63,51 @@ class BlogPostRepository extends ServiceEntityRepository
         // returns an array of arrays (i.e. a raw data set)
         return $stmt->fetchAll();
 
+    }
+
+    public function findAll(): array
+    {
+        // ---------------- DQL ----------------
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+        SELECT * FROM blog_post
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+
+        // returns an array of arrays (i.e. a raw data set)
+        return $stmt->fetchAll();
+    }
+
+    public function findPost($id){
+        // ---------------- DQL ----------------
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+        SELECT * FROM blog_post p where p.id LIKE $id
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+
+        // returns an array of arrays (i.e. a raw data set)
+        return $stmt->fetchAll();
+    }
+
+    public function updatePost($id, $obj){
+        // ---------------- DQL ----------------
+        $conn = $this->getEntityManager()->getConnection();
+
+        $titulo = $obj->getTitle();
+        $slug = $obj->getSlug();
+        $description = $obj->getDescription();
+
+        $sql = "
+        UPDATE blog_post p
+        SET title = '$titulo', slug = '$slug', description = '$description'
+        WHERE id LIKE $id; 
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
     }
 }

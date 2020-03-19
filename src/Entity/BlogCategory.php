@@ -27,7 +27,7 @@ class BlogCategory
     private $name;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\BlogPost", mappedBy="categories")
+     * @ORM\ManyToMany(targetEntity="App\Entity\BlogPost", mappedBy="categories")
     */
     protected $posts;
 
